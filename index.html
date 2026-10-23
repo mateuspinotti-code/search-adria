@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Search Adria</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: app de campo — cabeçalho fixo com abas, mapa esquemático + lista, ficha em painel lateral (gaveta no celular) */
+:root{
+  --bg:#F3F5F4; --surface:#FFFFFF; --ink:#15211E; --muted:#5C6B66; --line:#DCE3E0;
+  --accent:#0F6E5E; --accent-soft:#DDEFEA; --on-accent:#FFFFFF;
+  --hot:#C8364F; --warm:#B7790E; --cold:#5E7D8C; --blocked:#9AA5A1; --ok:#1E7A4C; --review:#B7790E;
+  --map-bg:#E9EFEC; --map-ring:#9DB8AF;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0F1513; --surface:#17201D; --ink:#E7EEEB; --muted:#93A39D; --line:#26332F;
+  --accent:#3FBFA3; --accent-soft:#163A33; --on-accent:#08201A;
+  --hot:#F06D82; --warm:#E9B44C; --cold:#8FAEBD; --blocked:#66726E; --ok:#5BD08F; --review:#E9B44C;
+  --map-bg:#131C19; --map-ring:#2F4A42; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0F1513; --surface:#17201D; --ink:#E7EEEB; --muted:#93A39D; --line:#26332F;
+  --accent:#3FBFA3; --accent-soft:#163A33; --on-accent:#08201A;
+  --hot:#F06D82; --warm:#E9B44C; --cold:#8FAEBD; --blocked:#66726E; --ok:#5BD08F; --review:#E9B44C;
+  --map-bg:#131C19; --map-ring:#2F4A42; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px 8px;flex-wrap:wrap}
+.brand h1{font-family:var(--display);font-weight:700;font-size:1.45rem;margin:0;letter-spacing:-.01em}
+.brand h1 span{color:var(--accent)}
+.brand small{display:block;color:var(--muted);font-size:.82rem}
+.proto{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--warm);border:1px solid currentColor;border-radius:999px;padding:3px 10px;white-space:nowrap}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:8px}
+nav.tabs button{background:none;border:0;padding:8px 14px;border-radius:999px;font-weight:600;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--accent);color:var(--on-accent)}
+
+main{padding-block:18px 48px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.kpi b{display:block;font-family:var(--display);font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi span{font-size:.78rem;color:var(--muted)}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.view[hidden]{display:none}
+.split{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.split{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+.panel h2{font-family:var(--display);font-size:1.1rem;margin:0 0 4px}
+.hint{color:var(--muted);font-size:.84rem;margin:0}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:999px;font-size:.85rem;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+select{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+
+svg.map{width:100%;height:auto;display:block;background:var(--map-bg);border-radius:10px}
+svg.map .city{fill:var(--muted);font-size:11px;font-family:var(--body)}
+svg.map .cdot{fill:var(--muted)}
+svg.map .ring{fill:none;stroke:var(--map-ring);stroke-dasharray:4 5;stroke-width:1.2}
+svg.map .ringlbl{fill:var(--map-ring);font-size:10px;font-family:var(--mono)}
+svg.map .home{fill:var(--accent)}
+svg.map .pin{cursor:pointer;stroke:var(--surface);stroke-width:2}
+svg.map .pin.sel{stroke:var(--ink);stroke-width:2.5}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+
+.list{display:flex;flex-direction:column;gap:8px;max-height:640px;overflow-y:auto}
+.lead{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;width:100%;background:none;border:1px solid var(--line);border-radius:10px;padding:10px}
+.lead:hover{border-color:var(--accent)}
+.lead.sel{border-color:var(--accent);background:var(--accent-soft)}
+.score{font-family:var(--mono);font-size:.9rem;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:500}
+.lead .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lead .sub{font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{font-size:.72rem;font-weight:600;border-radius:999px;padding:2px 8px;white-space:nowrap;border:1px solid currentColor}
+.p-novo{color:var(--cold)} .p-contatado{color:var(--warm)} .p-visita{color:var(--accent)} .p-venda{color:var(--ok)} .p-bloq{color:var(--blocked)}
+
+/* ficha */
+.sheet{position:fixed;z-index:20;background:var(--surface);border-left:1px solid var(--line);top:0;right:0;bottom:0;width:min(440px,100%);overflow-y:auto;box-shadow:-8px 0 30px rgba(0,0,0,.12);padding:calc(16px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 18px}
+@media (max-width:640px){.sheet{top:auto;left:0;width:100%;max-height:88%;border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding-left:max(18px,env(safe-area-inset-left,0px))}}
+.scrim{position:fixed;inset:0;z-index:19;background:rgba(0,0,0,.28)}
+.sheet h3{font-family:var(--display);font-size:1.35rem;margin:4px 0 2px;text-wrap:balance}
+.close{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));border:1px solid var(--line);background:var(--surface);border-radius:999px;width:34px;height:34px}
+.sec{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.sec h4{margin:0 0 8px;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+dl.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px;margin:0;font-size:.9rem}
+dl.kv dt{color:var(--muted)} dl.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.mono{font-family:var(--mono);font-size:.85rem}
+.why{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:.88rem}
+.why li::before{content:attr(data-s);display:inline-block;width:16px;font-weight:700}
+.why li[data-s="+"]::before{color:var(--ok)} .why li[data-s="–"]::before{color:var(--hot)}
+.ai{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.ai div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:.84rem}
+.ai b{display:block;font-size:.78rem}
+.verdict{margin-top:8px;font-weight:600;font-size:.88rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.75rem;border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--muted)}
+textarea{width:100%;min-height:150px;font:inherit;font-size:.88rem;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:600;font-size:.88rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* pesquisar */
+.pipeline{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.pipeline li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:10px;border:1px solid var(--line);border-radius:10px}
+.pipeline .st{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:.75rem;font-weight:700}
+.pipeline li.run .st{border-color:var(--warm);border-top-color:transparent;animation:spin 0.9s linear infinite}
+.pipeline li.done .st{background:var(--ok);border-color:var(--ok);color:#fff}
+.pipeline li b{display:block;font-size:.9rem}
+.pipeline li span{font-size:.8rem;color:var(--muted)}
+.tag{font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:4px;background:var(--accent-soft);color:var(--accent);margin-left:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.pipeline li.run .st{animation:none}}
+.found{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+
+/* plano */
+.days{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.day h3{font-family:var(--display);font-size:1rem;margin:0}
+.day .meta{font-size:.8rem;color:var(--muted);margin:2px 0 10px}
+.stop{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-top:1px dashed var(--line);font-size:.88rem;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;width:100%}
+.stop .n{font-family:var(--mono);font-size:.78rem;color:var(--accent)}
+.stop .d{font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+
+/* funil */
+.board{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
+.col{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;min-width:0}
+.col h3{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;margin:0 0 8px;display:flex;justify-content:space-between}
+.card{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px;background:var(--bg)}
+.card .nm{font-weight:600;font-size:.88rem}
+.card .sub{font-size:.76rem;color:var(--muted)}
+.card .mv{display:flex;justify-content:space-between;margin-top:6px}
+.card .mv button{border:1px solid var(--line);background:var(--surface);border-radius:6px;font-size:.75rem;padding:2px 8px}
+
+/* assistente */
+.chat{display:flex;flex-direction:column;gap:10px;max-height:520px;min-height:260px;overflow-y:auto;padding:12px 2px 4px}
+.msg{max-width:90%;padding:9px 12px;border-radius:14px;font-size:.92rem;min-width:0}
+.msg.bot{background:var(--bg);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+.msg.me{background:var(--accent);color:var(--on-accent);align-self:flex-end;border-bottom-right-radius:4px}
+.msg .lead{background:var(--surface);margin-top:6px}
+.sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sugg button{border:1px solid var(--accent);color:var(--accent);background:var(--surface);border-radius:999px;padding:4px 10px;font-size:.82rem;font-weight:600}
+.ask{display:flex;gap:8px;margin-top:10px}
+.ask input{flex:1;min-width:0;font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:9px 14px}
+input[type=date],input[type=time]{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+
+/* agenda */
+.calhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.week{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+@media (max-width:760px){.week{grid-template-columns:minmax(0,1fr)}}
+.dcol{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px;min-height:150px;min-width:0}
+@media (max-width:760px){.dcol{min-height:0}}
+.dcol.today{border-color:var(--accent);border-width:2px}
+.dcol h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;color:var(--muted);display:flex;justify-content:space-between}
+.dcol.today h3{color:var(--accent)}
+.ev{display:block;width:100%;text-align:left;border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--bg);border-radius:6px;padding:6px 8px;margin-bottom:6px;font-size:.82rem}
+.ev.t-retorno{border-left-color:var(--warm)} .ev.t-reposicao{border-left-color:var(--ok)}
+.ev b{font-family:var(--mono);font-size:.76rem;display:block}
+.ev .wa{display:block;font-size:.7rem;color:var(--muted);margin-top:2px}
+.empty{font-size:.8rem;color:var(--muted)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.88rem;z-index:30;max-width:calc(100% - 32px)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <div>
+        <h1>Search <span>Adria</span></h1>
+        <small>Prospecção de médicos · Rio Grande do Sul · base Canoas</small>
+      </div>
+      <span class="proto">Protótipo · dados fictícios</span>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="mapa" aria-selected="true">Mapa</button>
+      <button role="tab" data-tab="pesquisar" aria-selected="false">Pesquisar</button>
+      <button role="tab" data-tab="plano" aria-selected="false">Plano da semana</button>
+      <button role="tab" data-tab="agenda" aria-selected="false">Agenda</button>
+      <button role="tab" data-tab="funil" aria-selected="false">Funil</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="kpis" id="kpis"></section>
+
+  <section class="view" id="v-mapa">
+    <div class="split">
+      <div class="panel">
+        <div class="toolbar">
+          <div class="seg" id="zoom">
+            <button data-z="metro" aria-pressed="true">Anel 1 · Grande POA</button>
+            <button data-z="estado" aria-pressed="false">Estado inteiro</button>
+          </div>
+        </div>
+        <svg class="map" id="map" role="img" aria-label="Mapa esquemático com os médicos encontrados"></svg>
+        <div class="legend">
+          <span><i style="background:var(--hot)"></i>Quente (80+)</span>
+          <span><i style="background:var(--warm)"></i>Morno (60–79)</span>
+          <span><i style="background:var(--cold)"></i>Frio (&lt;60)</span>
+          <span><i style="background:var(--blocked)"></i>Sem CRM · fora do público</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="toolbar">
+          <select id="fAnel" aria-label="Filtrar por anel">
+            <option value="">Todos os anéis</option><option value="1">Anel 1 · visita no dia</option><option value="2">Anel 2 · bate-volta</option><option value="3">Anel 3 · viagem</option>
+          </select>
+          <select id="fEsp" aria-label="Filtrar por especialidade"><option value="">Todas as especialidades</option></select>
+        </div>
+        <div class="list" id="list"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-pesquisar" hidden>
+    <div class="split">
+      <div class="panel">
+        <h2>Assistente de busca</h2>
+        <p class="hint">Diga a região, e se quiser a especialidade. Ex.: "dermatologistas na Serra".</p>
+        <div class="chat" id="chat" aria-live="polite"></div>
+        <form class="ask" id="ask">
+          <input id="q" autocomplete="off" placeholder="Qual região você quer procurar?" aria-label="Mensagem para o assistente">
+          <button class="btn primary" type="submit">Enviar</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>O que o sistema está fazendo</h2>
+        <p class="hint" id="foundHint">Cada etapa acende quando a busca passa por ela.</p>
+        <ol class="pipeline" id="pipe"></ol>
+        <div class="found" id="found"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-plano" hidden>
+    <div class="panel" style="margin-bottom:12px">
+      <h2>Plano da semana</h2>
+      <p class="hint">Gerado a partir dos leads quentes e mornos com CRM ativo. Rotas em ordem de proximidade, saindo de Canoas. Tempos são estimativas.</p>
+    </div>
+    <div class="days" id="days"></div>
+  </section>
+
+  <section class="view" id="v-agenda" hidden>
+    <div class="panel" style="margin-bottom:12px">
+      <div class="calhead">
+        <div><h2>Agenda</h2><p class="hint">Visitas e retornos marcados. Toque num compromisso para abrir a ficha.</p></div>
+        <div class="seg"><button id="wPrev" aria-label="Semana anterior">←</button><button id="wToday">Esta semana</button><button id="wNext" aria-label="Próxima semana">→</button></div>
+      </div>
+      <p class="hint" id="wLabel"></p>
+    </div>
+    <div class="week" id="week"></div>
+    <div class="panel" style="margin-top:12px" id="semData"></div>
+  </section>
+
+  <section class="view" id="v-funil" hidden>
+    <div class="panel" style="margin-bottom:12px">
+      <h2>Funil de vendas</h2>
+      <p class="hint">Mova cada médico de etapa. No sistema real, isso ensina a nota a dar mais peso ao que vira venda.</p>
+    </div>
+    <div class="board" id="board"></div>
+  </section>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="sheet" id="sheet" hidden aria-label="Ficha do médico"></aside>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const BASE = {lat:-29.917, lon:-51.183};
+const CITIES = {
+  "Canoas":[-29.917,-51.183,1],"Porto Alegre":[-30.033,-51.230,1],"Esteio":[-29.861,-51.179,1],
+  "Sapucaia do Sul":[-29.828,-51.145,1],"Cachoeirinha":[-29.951,-51.094,1],"Gravataí":[-29.944,-50.992,1],
+  "Nova Santa Rita":[-29.857,-51.284,1],"São Leopoldo":[-29.760,-51.147,2],"Novo Hamburgo":[-29.678,-51.130,2],
+  "Caxias do Sul":[-29.168,-51.179,2],"Gramado":[-29.379,-50.874,2],"Bento Gonçalves":[-29.171,-51.519,2],
+  "Lajeado":[-29.467,-51.961,3],"Santa Cruz do Sul":[-29.718,-52.426,3],"Santa Maria":[-29.684,-53.807,3],
+  "Passo Fundo":[-28.262,-52.407,3],"Pelotas":[-31.772,-52.343,3]
+};
+const STAGES = [["novo","Novo"],["contatado","Contatado"],["visita","Visita marcada"],["venda","Venda"]];
+
+let seed = 7;
+const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+function near(city, spread){ const c = CITIES[city]; return [c[0]+(rnd()-.5)*spread, c[1]+(rnd()-.5)*spread]; }
+
+function L(o){
+  const [lat,lon] = near(o.cidade, CITIES[o.cidade][2]===1 ? .035 : .05);
+  return Object.assign({lat, lon, anel:CITIES[o.cidade][2], status:"novo", crm:"ativo", acordo:"confirmado"}, o);
+}
+let LEADS = [
+  L({id:1,medico:"Dra. Helena Vasconcellos",esp:"Dermatologia",rqe:true,clinica:"Derma Vasconcellos (exemplo)",cidade:"Canoas",bairro:"Centro",
+    dono:"Helena Vasconcellos · sócia-administradora",ig:"@exemplo_dermavasconcellos",seg:"18,2 mil",
+    servicos:["Toxina botulínica","Preenchimento com ácido hialurônico","Bioestimulador (outra marca)","Laser"],bio:"Sim, de outra marca",score:92,
+    why:[["+","Dermatologista com RQE"],["+","Já aplica bioestimulador: conhece a categoria"],["+","Posta procedimentos injetáveis toda semana"],["+","8 min de Canoas"]]}),
+  L({id:2,medico:"Dr. Rafael Menegotto",esp:"Cirurgia plástica",rqe:true,clinica:"Instituto Menegotto (exemplo)",cidade:"Porto Alegre",bairro:"Moinhos de Vento",
+    dono:"Rafael Menegotto e 1 sócio",ig:"@exemplo_institutomenegotto",seg:"41,0 mil",
+    servicos:["Cirurgia facial","Harmonização","Bioestimulador (outra marca)"],bio:"Sim, de outra marca",score:88,status:"contatado",
+    why:[["+","Cirurgião plástico com RQE"],["+","Clínica grande, 2 sócios"],["+","Público de alto poder aquisitivo"],["–","Agenda cheia: resposta lenta"]]}),
+  L({id:3,medico:"Dra. Camila Rech",esp:"Dermatologia",rqe:true,clinica:"Rech Dermatologia (exemplo)",cidade:"Esteio",bairro:"Centro",
+    dono:"Camila Rech · titular",ig:"@exemplo_rechderma (?)",seg:"6,1 mil",
+    servicos:["Dermatologia clínica","Toxina botulínica"],bio:"Não encontrado",score:74,acordo:"revisar",
+    why:[["+","Dermatologista com RQE"],["+","Já faz injetáveis"],["–","Instagram não confirmado pelas duas IAs"]]}),
+  L({id:4,medico:"Dr. Paulo Scherer",esp:"Medicina estética",rqe:false,clinica:"Clínica Scherer (exemplo)",cidade:"Cachoeirinha",bairro:"Vila Imbuí",
+    dono:"Paulo Scherer · titular",ig:"@exemplo_clinicascherer",seg:"9,8 mil",
+    servicos:["Harmonização facial","Fios de PDO","Preenchimento"],bio:"Não",score:63,
+    why:[["+","Foco total em estética"],["+","Muito ativo no Instagram"],["–","Sem RQE: só CRM, sem especialidade registrada"]]}),
+  L({id:5,medico:"Dra. Juliana Dall'Agnol",esp:"Dermatologia",rqe:true,clinica:"Dall'Agnol Dermatologia (exemplo)",cidade:"Gravataí",bairro:"Centro",
+    dono:"Juliana Dall'Agnol · titular",ig:"@exemplo_dallagnolderma",seg:"12,7 mil",
+    servicos:["Toxina botulínica","Preenchimento","Skinbooster"],bio:"Não",score:79,status:"visita",
+    why:[["+","Dermatologista com RQE"],["+","Já faz preenchimento: Radiesse é passo natural"],["–","Ainda não usa bioestimulador"]]}),
+  L({id:6,medico:"Dra. Bianca Kessler",esp:"Cirurgia plástica",rqe:true,clinica:"Kessler Plástica (exemplo)",cidade:"Porto Alegre",bairro:"Bela Vista",
+    dono:"Bianca Kessler · sócia-administradora",ig:"@exemplo_kesslerplastica",seg:"27,5 mil",
+    servicos:["Cirurgia facial","Bioestimulador (outra marca)","Tratamento corporal"],bio:"Sim, de outra marca",score:85,
+    why:[["+","Cirurgiã plástica com RQE"],["+","Usa bioestimulador também no corpo"],["+","Posts recentes sobre flacidez"]]}),
+  L({id:7,medico:"Dr. André Lopes",esp:"Clínica médica",rqe:false,clinica:"Consultório Dr. André (exemplo)",cidade:"Sapucaia do Sul",bairro:"Centro",
+    dono:"André Lopes · titular",ig:"não encontrado",seg:"–",
+    servicos:["Clínica geral","Toxina botulínica (eventual)"],bio:"Não",score:42,
+    why:[["+","CRM ativo"],["–","Estética não é o foco"],["–","Sem Instagram profissional"]]}),
+  L({id:8,medico:"Sem médico responsável",esp:"Estúdio de estética",rqe:false,clinica:"Estúdio Face (exemplo)",cidade:"Canoas",bairro:"Marechal Rondon",
+    dono:"Proprietária sem registro no CFM",ig:"@exemplo_estudioface",seg:"22,0 mil",crm:"não encontrado",acordo:"confirmado",
+    servicos:["Design de sobrancelha","Limpeza de pele","Harmonização (anunciada)"],bio:"–",score:0,
+    why:[["–","Nenhum médico com CRM ativo vinculado"],["–","Fora do público do Radiesse: não abordar"]]}),
+  L({id:9,medico:"Dra. Fernanda Bortolini",esp:"Dermatologia",rqe:true,clinica:"Bortolini Derma (exemplo)",cidade:"Novo Hamburgo",bairro:"Hamburgo Velho",
+    dono:"Fernanda Bortolini e 2 sócias",ig:"@exemplo_bortoliniderma",seg:"15,3 mil",
+    servicos:["Toxina botulínica","Preenchimento","Bioestimulador (outra marca)"],bio:"Sim, de outra marca",score:83,
+    why:[["+","Dermatologista com RQE"],["+","Clínica com 3 médicas: volume maior"],["+","Já usa bioestimulador"]]}),
+  L({id:10,medico:"Dr. Gustavo Petry",esp:"Cirurgia plástica",rqe:true,clinica:"Petry Cirurgia Plástica (exemplo)",cidade:"São Leopoldo",bairro:"Centro",
+    dono:"Gustavo Petry · titular",ig:"@exemplo_petryplastica",seg:"8,4 mil",
+    servicos:["Cirurgia corporal","Cirurgia facial"],bio:"Sim, Radiesse",score:70,status:"venda",
+    why:[["+","Cirurgião plástico com RQE"],["+","Já comprou: cliente ativo"]]}),
+  L({id:11,medico:"Dra. Luiza Tomasi",esp:"Dermatologia",rqe:true,clinica:"Tomasi Dermatologia (exemplo)",cidade:"Caxias do Sul",bairro:"Exposição",
+    dono:"Luiza Tomasi · sócia-administradora",ig:"@exemplo_tomasiderma",seg:"33,9 mil",
+    servicos:["Toxina botulínica","Preenchimento","Bioestimulador (outra marca)","Laser"],bio:"Sim, de outra marca",score:90,
+    why:[["+","Maior perfil de dermatologia da Serra"],["+","Já usa bioestimulador"],["–","1h50 de Canoas: combinar com outras visitas"]]}),
+  L({id:12,medico:"Dra. Marina Zanella",esp:"Medicina estética",rqe:false,clinica:"Zanella Estética Médica (exemplo)",cidade:"Gramado",bairro:"Centro",
+    dono:"Marina Zanella · titular",ig:"@exemplo_zanellaestetica",seg:"19,6 mil",
+    servicos:["Harmonização facial","Bioestimulador (outra marca)"],bio:"Sim, de outra marca",score:76,status:"contatado",
+    why:[["+","Público turista de alto padrão"],["+","Já usa bioestimulador"],["–","Sem RQE"]]}),
+  L({id:13,medico:"Dra. Patrícia Weber",esp:"Dermatologia",rqe:true,clinica:"Weber Dermatologia (exemplo)",cidade:"Santa Maria",bairro:"Centro",
+    dono:"Patrícia Weber · titular",ig:"@exemplo_weberderma",seg:"11,0 mil",
+    servicos:["Toxina botulínica","Preenchimento"],bio:"Não",score:81,
+    why:[["+","Dermatologista com RQE"],["+","Pouca concorrência de representantes na região"],["–","4h de Canoas: só em viagem"]]}),
+  L({id:14,medico:"Dr. Eduardo Fagundes",esp:"Cirurgia plástica",rqe:true,clinica:"Fagundes Plástica (exemplo)",cidade:"Passo Fundo",bairro:"Centro",
+    dono:"Eduardo Fagundes e 1 sócio",ig:"@exemplo_fagundesplastica",seg:"14,2 mil",
+    servicos:["Cirurgia facial","Bioestimulador (outra marca)"],bio:"Sim, de outra marca",score:72,
+    why:[["+","Cirurgião plástico com RQE"],["+","Já usa bioestimulador"],["–","4h30 de Canoas"]]}),
+];
+const FIRST = ["Ana","Carolina","Letícia","Mariana","Rodrigo","Thiago","Daniela","Gabriela","Lucas","Renata"];
+const LAST = ["Pereira","Bertoldi","Schmitt","Fontana","Cardoso","Bianchi","Klein","Ramos","Lazzari","Rossi"];
+const ESPS = [["Dermatologia",true],["Cirurgia plástica",true],["Medicina estética",false]];
+
+try { const st = JSON.parse(localStorage.getItem("sa-status")||"{}"); LEADS.forEach(l => { if(st[l.id]) l.status = st[l.id]; }); } catch(e){}
+function saveStatus(){ try { const o={}; LEADS.forEach(l=>o[l.id]=l.status); localStorage.setItem("sa-status", JSON.stringify(o)); } catch(e){} }
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const blocked = l => l.crm !== "ativo";
+const tier = l => blocked(l) ? "blocked" : l.score>=80 ? "hot" : l.score>=60 ? "warm" : "cold";
+const color = l => `var(--${tier(l)})`;
+function km(a,b){ const R=6371,r=Math.PI/180,dl=(b.lat-a.lat)*r,dn=(b.lon-a.lon)*r;
+  const h=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)**2; return 2*R*Math.asin(Math.sqrt(h))*1.3; }
+function mins(k){ const v = k<35 ? 40 : 75; return Math.round(k/v*60)+5; }
+function fmtT(m){ return m<60 ? `${m} min` : `${Math.floor(m/60)}h${String(m%60).padStart(2,"0")}`; }
+function toast(t){ const el=$("#toast"); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true,2600); }
+
+/* KPIs */
+function kpis(){
+  const ok = LEADS.filter(l=>!blocked(l));
+  $("#kpis").innerHTML = [
+    [LEADS.length,"médicos e clínicas no mapa"],
+    [ok.length,"com CRM ativo"],
+    [ok.filter(l=>l.score>=80).length,"quentes (nota 80+)"],
+    [LEADS.filter(l=>l.acordo==="revisar").length,"para revisar"]
+  ].map(([n,t])=>`<div class="kpi"><b>${n}</b><span>${t}</span></div>`).join("");
+}
+
+/* Mapa */
+let zoom = "metro", selected = null;
+const VIEWS = { metro:{n:-29.62,s:-30.12,w:-51.40,e:-50.90}, estado:{n:-27.0,s:-33.8,w:-57.7,e:-49.6} };
+function drawMap(){
+  const b = VIEWS[zoom], W = 600, cos = Math.cos(((b.n+b.s)/2)*Math.PI/180);
+  const H = Math.round(W*(b.n-b.s)/((b.e-b.w)*cos));
+  const P = (lat,lon) => [ (lon-b.w)/(b.e-b.w)*W, (b.n-lat)/(b.n-b.s)*H ];
+  const kmPx = k => k/111/(b.n-b.s)*H;
+  const [hx,hy] = P(BASE.lat,BASE.lon);
+  let s = "";
+  const rings = zoom==="metro" ? [[25,"anel 1 · 25 km"]] : [[25,"anel 1"],[130,"anel 2 · 130 km"]];
+  rings.forEach(([k,t])=>{ const r=kmPx(k); s+=`<circle class="ring" cx="${hx}" cy="${hy}" r="${r}"/><text class="ringlbl" x="${hx+r*0.72}" y="${hy-r*0.72}">${t}</text>`; });
+  Object.entries(CITIES).forEach(([n,[la,lo]])=>{ const [x,y]=P(la,lo); if(x<0||x>W||y<0||y>H) return;
+    s+=`<circle class="cdot" cx="${x}" cy="${y}" r="2"/><text class="city" x="${x+5}" y="${y-5}">${esc(n)}</text>`; });
+  s+=`<rect class="home" x="${hx-6}" y="${hy-6}" width="12" height="12" rx="3" transform="rotate(45 ${hx} ${hy})"/>`;
+  visible().slice().sort((a,c)=>a.score-c.score).forEach(l=>{ const [x,y]=P(l.lat,l.lon); if(x<0||x>W||y<0||y>H) return;
+    s+=`<circle class="pin${selected===l.id?" sel":""}" data-id="${l.id}" cx="${x}" cy="${y}" r="${zoom==="metro"?9:6}" fill="${color(l)}"><title>${esc(l.medico)} · nota ${l.score}</title></circle>`; });
+  const m = $("#map"); m.setAttribute("viewBox",`0 0 ${W} ${H}`); m.innerHTML = s;
+}
+function visible(){ const a=$("#fAnel").value, e=$("#fEsp").value; return LEADS.filter(l=>(!a||l.anel==a)&&(!e||l.esp===e)); }
+function leadRow(l){
+  const st = blocked(l) ? `<span class="pill p-bloq">Sem CRM</span>` : `<span class="pill p-${l.status}">${STAGES.find(s=>s[0]===l.status)[1]}</span>`;
+  return `<button class="lead${selected===l.id?" sel":""}" data-id="${l.id}">
+    <span class="score" style="background:${color(l)}">${blocked(l)?"–":l.score}</span>
+    <span style="min-width:0"><span class="nm" style="display:block">${esc(l.medico)}</span><span class="sub" style="display:block">${esc(l.esp)} · ${esc(l.cidade)} · ${fmtT(mins(km(BASE,l)))} de carro</span></span>${st}</button>`;
+}
+function drawList(){ $("#list").innerHTML = visible().sort((a,b)=>b.score-a.score).map(leadRow).join("") || `<p class="hint">Nenhum médico com esses filtros.</p>`; }
+function refresh(){ kpis(); drawMap(); drawList(); drawAgenda(); }
+
+/* Ficha */
+function pitch(l){
+  const nome = l.medico.replace(/^Dr[a]?\. /,"").split(" ")[0];
+  const trat = l.medico.startsWith("Dra") ? "Dra." : "Dr.";
+  const gancho = l.bio.startsWith("Sim, de outra") ? "Vi que vocês já trabalham com bioestimulador e queria te mostrar como o Radiesse se encaixa nesse protocolo."
+    : l.bio==="Sim, Radiesse" ? "Obrigada pela parceria! Passo para combinar a reposição e as novidades."
+    : "Vi o trabalho de vocês com preenchimento e acho que o Radiesse pode somar ao que você já oferece.";
+  return `Oi, ${trat} ${nome}! Tudo bem? Aqui é a Adriana Favretto, trabalho com Radiesse aqui no RS.\n\n${gancho}\n\nPosso passar na ${l.clinica.replace(" (exemplo)","")} uns 15 minutos esta semana para apresentar? Se preferir que eu não entre em contato, é só me avisar.`;
+}
+function openSheet(id){
+  const l = LEADS.find(x=>x.id===id); selected = id; refresh();
+  const k = km(BASE,l), b = blocked(l);
+  $("#sheet").innerHTML = `
+    <button class="close" id="close" aria-label="Fechar">✕</button>
+    <span class="pill p-${b?"bloq":l.status}">${b?"Fora do público":STAGES.find(s=>s[0]===l.status)[1]}</span>
+    <h3>${esc(l.medico)}</h3>
+    <p class="hint">${esc(l.clinica)} · ${esc(l.bairro)}, ${esc(l.cidade)}</p>
+    <div class="sec"><h4>Nota ${b?"–":l.score} · por quê</h4><ul class="why">${l.why.map(([s,t])=>`<li data-s="${s}">${esc(t)}</li>`).join("")}</ul></div>
+    <div class="sec"><h4>Registro médico</h4><dl class="kv">
+      <dt>CRM</dt><dd>${b?`<b style="color:var(--hot)">Não encontrado</b>`:`<span class="mono">CRM-RS 000${String(l.id).padStart(2,"0")}</span> · <b style="color:var(--ok)">ativo</b>`}</dd>
+      <dt>Especialidade</dt><dd>${esc(l.esp)}${l.rqe?` · <span class="mono">RQE</span> registrado`:b?"":" · sem RQE"}</dd>
+      <dt>Fonte</dt><dd>CFM / CREMERS</dd></dl></div>
+    <div class="sec"><h4>Empresa e dono</h4><dl class="kv">
+      <dt>CNPJ</dt><dd class="mono">00.000.000/0001-${String(l.id).padStart(2,"0")}</dd>
+      <dt>Dono</dt><dd>${esc(l.dono)}</dd>
+      <dt>Instagram</dt><dd>${esc(l.ig)} · ${esc(l.seg)} seguidores</dd>
+      <dt>Faz</dt><dd>${l.servicos.map(esc).join(", ")}</dd>
+      <dt>Bioestimulador</dt><dd>${esc(l.bio)}</dd>
+      <dt>Distância</dt><dd>${Math.round(k)} km · ${fmtT(mins(k))} de Canoas (estimativa)</dd></dl></div>
+    <div class="sec"><h4>Conferência das IAs</h4>
+      <div class="ai"><div><b>Claude · pesquisa</b>Achou Instagram, serviços e posts em 4 fontes.</div>
+      <div><b>OpenAI · conferência</b>${l.acordo==="revisar"?"Achou outro perfil de Instagram.":"Confirmou os mesmos dados."}</div></div>
+      <div class="verdict" style="color:${l.acordo==="revisar"?"var(--review)":"var(--ok)"}">${l.acordo==="revisar"?"Revisar: as IAs discordam no Instagram":"Confirmado pelas duas"}</div>
+      <div class="chips" style="margin-top:8px">${["Google Places","CFM / CREMERS","Receita (QSA)","Instagram","Site da clínica"].map(c=>`<span class="chip">${c}</span>`).join("")}</div></div>
+    ${b ? `<div class="sec"><p class="hint">Sem médico com CRM ativo. O sistema não gera abordagem para este contato.</p></div>` : `
+    <div class="sec"><h4>Abordagem pronta</h4>
+      <textarea id="msg" aria-label="Mensagem de abordagem">${esc(pitch(l))}</textarea>
+      <div class="btns"><button class="btn primary" id="copy">Copiar mensagem</button>
+      <button class="btn" id="adv">${l.status==="venda"?"Já é venda":"Avançar no funil →"}</button></div>
+      <p class="hint" style="margin-top:6px">No sistema real, um botão abre o WhatsApp da Adriana com este texto. Ela revisa e envia.</p></div>
+    <div class="sec"><h4>Agendar</h4>
+      ${APPTS.filter(a=>a.leadId===l.id).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).map(a=>`<p class="hint" style="margin-bottom:6px">${fmtD(a.date)} às ${a.time} · ${a.tipo}</p>`).join("")}
+      <div class="toolbar"><input type="date" id="aDate" value="${nextBiz()}" aria-label="Data"><input type="time" id="aTime" value="10:00" aria-label="Hora">
+      <select id="aTipo" aria-label="Tipo"><option>Visita</option><option>Retorno</option><option>Reposição</option></select>
+      <button class="btn primary" id="aGo">Agendar</button></div>
+      <p class="hint">No sistema real, o compromisso vai para o Google Agenda dela e o WhatsApp manda confirmação e lembrete.</p></div>`}`;
+  $("#sheet").hidden = false; $("#scrim").hidden = false;
+  $("#close").onclick = closeSheet;
+  const c = $("#copy"); if(c) c.onclick = () => { const t=$("#msg");
+    navigator.clipboard.writeText(t.value).then(()=>toast("Mensagem copiada")).catch(()=>{ t.select(); toast("Texto selecionado: use Copiar do celular"); }); };
+  const a = $("#adv"); if(a){ a.disabled = l.status==="venda"; a.onclick = () => move(l.id,1,true); }
+  const g = $("#aGo"); if(g) g.onclick = () => { const date = $("#aDate").value, time = $("#aTime").value || "10:00", tipo = $("#aTipo").value;
+    if(!date){ toast("Escolha a data da visita"); return; }
+    APPTS.push({leadId:l.id, date, time, tipo}); saveAppts();
+    if(tipo==="Visita" && (l.status==="novo"||l.status==="contatado")){ l.status = "visita"; saveStatus(); }
+    weekStart = monday(fromIso(date)); drawBoard(); drawPlan(); toast(`Agendado: ${fmtD(date)} às ${time}`); openSheet(l.id); };
+}
+function closeSheet(){ $("#sheet").hidden = true; $("#scrim").hidden = true; selected = null; refresh(); }
+$("#scrim").onclick = closeSheet;
+document.addEventListener("keydown", e => { if(e.key==="Escape" && !$("#sheet").hidden) closeSheet(); });
+document.addEventListener("click", e => { const t = e.target.closest("[data-id]"); if(t && !e.target.closest(".mv")) openSheet(+t.dataset.id); });
+
+/* Funil */
+function move(id,dir,reopen){
+  const l = LEADS.find(x=>x.id===id), i = STAGES.findIndex(s=>s[0]===l.status), j = Math.max(0,Math.min(3,i+dir));
+  if(i===j) return; l.status = STAGES[j][0]; saveStatus(); drawBoard(); refresh();
+  toast(`${l.medico}: ${STAGES[j][1]}`); if(reopen) openSheet(id);
+}
+function drawBoard(){
+  $("#board").innerHTML = STAGES.map(([k,t])=>{ const items = LEADS.filter(l=>!blocked(l)&&l.status===k).sort((a,b)=>b.score-a.score);
+    return `<div class="col"><h3><span>${t}</span><span class="mono">${items.length}</span></h3>${items.map(l=>`
+      <div class="card"><div class="nm">${esc(l.medico)}</div><div class="sub">${esc(l.cidade)} · nota ${l.score}</div>
+      <div class="mv"><button data-mv="${l.id}" data-d="-1" ${k==="novo"?"disabled":""} aria-label="Voltar etapa">←</button><button data-mv="${l.id}" data-d="1" ${k==="venda"?"disabled":""} aria-label="Avançar etapa">→</button></div></div>`).join("") || `<p class="hint">Vazio</p>`}</div>`; }).join("");
+}
+$("#board").addEventListener("click", e => { const b = e.target.closest("[data-mv]"); if(b) move(+b.dataset.mv, +b.dataset.d); });
+
+/* Plano */
+function route(list){
+  let cur = BASE, left = list.slice(), out = [], tot = 0;
+  while(left.length){ left.sort((a,b)=>km(cur,a)-km(cur,b)); const n = left.shift(); const d = km(cur,n); tot += mins(d); out.push([n,d]); cur = n; }
+  tot += mins(km(cur,BASE)) + out.length*40; return {out,tot};
+}
+function drawPlan(){
+  const pool = LEADS.filter(l=>!blocked(l) && l.score>=60 && (l.status==="novo"||l.status==="visita"));
+  const a1 = pool.filter(l=>l.anel===1).sort((a,b)=>b.score-a.score);
+  const sinos = pool.filter(l=>["Novo Hamburgo","São Leopoldo"].includes(l.cidade));
+  const serra = pool.filter(l=>l.anel===2 && !sinos.includes(l));
+  const a3 = pool.filter(l=>l.anel===3);
+  const follow = LEADS.filter(l=>!blocked(l) && l.status==="contatado");
+  const day = (title, list, note) => { if(!list.length) return `<div class="panel day"><h3>${title}</h3><p class="day meta">${note||"Nada pendente"}</p></div>`;
+    const r = route(list);
+    return `<div class="panel day"><h3>${title}</h3><p class="meta">${list.length} visita${list.length>1?"s":""} · dia de ~${fmtT(r.tot)} com 40 min por visita${note?` · ${note}`:""}</p>
+      ${r.out.map(([l,d],i)=>`<button class="stop" data-id="${l.id}"><span class="n">${i+1}</span><span>${esc(l.medico)}<br><span class="hint">${esc(l.cidade)} · nota ${l.score}</span></span><span class="d">${fmtT(mins(d))}</span></button>`).join("")}</div>`; };
+  $("#days").innerHTML =
+    day("Segunda · Canoas e vizinhos", a1.slice(0,3)) +
+    day("Terça · Porto Alegre e região", a1.slice(3,6)) +
+    `<div class="panel day"><h3>Quarta · WhatsApp e retornos</h3><p class="meta">${follow.length} médico${follow.length===1?"":"s"} aguardando resposta</p>
+      ${follow.map(l=>`<button class="stop" data-id="${l.id}"><span class="n">↺</span><span>${esc(l.medico)}<br><span class="hint">${esc(l.cidade)} · mandar retorno</span></span><span class="d">msg</span></button>`).join("")}</div>` +
+    day("Quinta · bate-volta Vale dos Sinos", sinos) +
+    day("Sexta · Serra Gaúcha", serra, "sair cedo") +
+    day("Próxima viagem · interior (2–3 dias)", a3, "agendar antes de ir");
+}
+
+/* Pesquisar */
+const STEPS = [
+  ["Buscando clínicas e consultórios","Google Places / OpenStreetMap",""],
+  ["Conferindo CRM e especialidade","CFM / CREMERS · fonte oficial",""],
+  ["Descobrindo CNPJ e dono","Receita Federal (QSA) · fonte oficial",""],
+  ["Pesquisando Instagram e serviços","Busca na web","Claude"],
+  ["Conferindo a ficha","Segunda opinião independente","OpenAI"],
+  ["Calculando a nota e pondo no mapa","Especialidade, uso de bioestimulador, distância",""]
+];
+let nextId = 100, busy = false;
+function drawPipe(at){ $("#pipe").innerHTML = STEPS.map(([t,s,tag],i)=>`<li class="${i<at?"done":i===at?"run":""}"><span class="st">${i<at?"✓":""}</span><span><b>${t}${tag?`<span class="tag">${tag}</span>`:""}</b><span>${s}</span></span></li>`).join(""); }
+drawPipe(-1);
+function genLead(city, espForced){
+  const [esp,rqe] = espForced ? ESPS.find(e=>e[0]===espForced) : ESPS[Math.floor(rnd()*3)], fem = rnd()>.4;
+  const nm = FIRST[Math.floor(rnd()*FIRST.length)], ln = LAST[Math.floor(rnd()*LAST.length)], sc = 55+Math.floor(rnd()*40);
+  const l = L({id:nextId++, medico:`${fem?"Dra.":"Dr."} ${nm} ${ln}`, esp, rqe, clinica:`Clínica ${ln} (exemplo)`, cidade:city, bairro:"Centro",
+    dono:`${nm} ${ln} · titular`, ig:`@exemplo_${ln.toLowerCase()}${esp==="Dermatologia"?"derma":"clinica"}`, seg:`${(3+rnd()*20).toFixed(1).replace(".",",")} mil`,
+    servicos:["Toxina botulínica","Preenchimento"].concat(rnd()>.5?["Bioestimulador (outra marca)"]:[]), score:sc, acordo: rnd()>.8?"revisar":"confirmado",
+    why:[["+",rqe?`${esp} com RQE`:`${esp}, sem RQE`],["+","Faz injetáveis faciais"],[sc<70?"–":"+",sc<70?"Pouca presença no Instagram":"Perfil ativo no Instagram"]] });
+  l.bio = l.servicos.length>2 ? "Sim, de outra marca" : "Não"; return l;
+}
+function runSearch(cities, esp){
+  return new Promise(done => {
+    $("#found").innerHTML = ""; $("#foundHint").textContent = `Varrendo ${cities.join(", ")}…`;
+    const fast = matchMedia("(prefers-reduced-motion: reduce)").matches ? 150 : 650;
+    let i = 0; drawPipe(0);
+    const tick = setInterval(() => { i++; drawPipe(i);
+      if(i < STEPS.length) return;
+      clearInterval(tick);
+      const news = [], per = cities.length > 3 ? 1 : 2;
+      cities.forEach(c => { for(let k=0;k<per;k++) news.push(genLead(c, esp)); });
+      LEADS.push(...news); fillEsp();
+      $("#found").innerHTML = news.map(leadRow).join(""); $("#foundHint").textContent = `${news.length} médicos com CRM ativo. Toque para abrir a ficha.`;
+      refresh(); drawPlan(); drawBoard();
+      done({news, discarded: rnd()>.5 ? 1 : 0});
+    }, fast);
+  });
+}
+
+/* Assistente */
+const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+const byRing = n => Object.keys(CITIES).filter(c=>CITIES[c][2]===n);
+const REGIONS = [
+  [["serra"], ["Caxias do Sul","Gramado","Bento Gonçalves"], "Serra Gaúcha"],
+  [["vale dos sinos","sinos"], ["Novo Hamburgo","São Leopoldo"], "Vale dos Sinos"],
+  [["grande poa","grande porto alegre","metropolitana","anel 1","perto"], byRing(1), "Grande Porto Alegre"],
+  [["interior","anel 3"], byRing(3), "interior"]
+];
+const ESPK = [["derma","Dermatologia"],["plastic","Cirurgia plástica"],["cirurgi","Cirurgia plástica"],["estetic","Medicina estética"]];
+function parse(text){
+  const t = norm(text), cities = [], label = [];
+  if(/\b(estado|rs todo|rio grande do sul|todo o rs)\b/.test(t)) return {all:true};
+  REGIONS.forEach(([keys,cs,lbl]) => { if(keys.some(k=>t.includes(k))){ cs.forEach(c=>cities.includes(c)||cities.push(c)); label.push(lbl); } });
+  Object.keys(CITIES).forEach(c => { if(t.includes(norm(c)) && !cities.includes(c)){ cities.push(c); label.push(c); } });
+  if(/\bpoa\b/.test(t) && !cities.includes("Porto Alegre")){ cities.push("Porto Alegre"); label.push("Porto Alegre"); }
+  return {cities, label, esp:(ESPK.find(([k])=>t.includes(k))||[])[1]};
+}
+const sugg = list => `<div class="sugg">${list.map(s=>`<button type="button" data-say="${esc(s)}">${esc(s)}</button>`).join("")}</div>`;
+function say(who, html){ const c=$("#chat"); c.insertAdjacentHTML("beforeend", `<div class="msg ${who}">${html}</div>`); c.scrollTop = c.scrollHeight; }
+async function handle(text){
+  text = text.trim(); if(!text) return;
+  say("me", esc(text));
+  if(busy){ say("bot","Ainda estou terminando a busca anterior. Já te aviso."); return; }
+  const p = parse(text);
+  if(p.all){ say("bot", `O RS tem 497 cidades. Melhor ir por partes, começando perto de casa. Por onde eu começo?${sugg(["Grande Porto Alegre","Vale dos Sinos","Serra Gaúcha","Interior"])}`); return; }
+  if(!p.cities.length){ say("bot", `Não reconheci essa região. Pode dizer uma cidade do RS ou uma região, como Serra ou Vale dos Sinos. Neste protótipo eu conheço: ${Object.keys(CITIES).join(", ")}.`); return; }
+  const quem = p.esp ? `médicos de ${p.esp.toLowerCase()}` : "médicos";
+  say("bot", `Combinado. Vou procurar ${quem} em <b>${esc(p.label.join(", "))}</b>${p.cities.length>p.label.length?` (${p.cities.length} cidades)`:""}. Confiro o CRM de cada um antes de pôr no mapa.`);
+  busy = true;
+  const {news, discarded} = await runSearch(p.cities, p.esp);
+  busy = false;
+  const top = news.slice().sort((a,b)=>b.score-a.score).slice(0,3);
+  say("bot", `Pronto! Achei <b>${news.length}</b> médicos com CRM ativo${discarded?` e descartei ${discarded} estúdio sem médico responsável`:""}. Os mais promissores:${top.map(leadRow).join("")}
+    <div class="sugg"><button type="button" data-goto="mapa">Ver no mapa</button><button type="button" data-goto="plano">Ver plano da semana</button></div>`);
+  say("bot", `Quer procurar em outra região?${sugg(["Vale dos Sinos","Dermatologistas na Serra","Interior"])}`);
+}
+$("#ask").addEventListener("submit", e => { e.preventDefault(); const q=$("#q"); handle(q.value); q.value=""; });
+$("#chat").addEventListener("click", e => { const b = e.target.closest("[data-say]"); if(b) handle(b.dataset.say); });
+say("bot", `Oi, Adriana! Qual região você quer procurar hoje?${sugg(["Canoas","Dermatologistas em Porto Alegre","Serra Gaúcha","Vale dos Sinos"])}`);
+
+/* Agenda */
+const DAYN = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const pad = n => String(n).padStart(2,"0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const addD = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const monday = d => { const x = new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; };
+const fromIso = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y,m-1,d); };
+const fmtD = s => { const d = fromIso(s); return `${DAYN[d.getDay()]} ${pad(d.getDate())}/${pad(d.getMonth()+1)}`; };
+let weekStart = monday(new Date()), APPTS = null;
+try { APPTS = JSON.parse(localStorage.getItem("sa-agenda")||"null"); } catch(e){}
+if(!Array.isArray(APPTS)){ const m = monday(new Date()); APPTS = [
+  {leadId:5, date:iso(addD(m,1)), time:"10:00", tipo:"Visita"},
+  {leadId:2, date:iso(addD(m,3)), time:"09:00", tipo:"Retorno"},
+  {leadId:12,date:iso(addD(m,4)), time:"11:00", tipo:"Retorno"},
+  {leadId:10,date:iso(addD(m,4)), time:"16:00", tipo:"Reposição"},
+  {leadId:9, date:iso(addD(m,8)), time:"15:00", tipo:"Visita"} ];
+  const l9 = LEADS.find(l=>l.id===9); if(l9.status==="novo") l9.status = "visita"; }
+function saveAppts(){ try { localStorage.setItem("sa-agenda", JSON.stringify(APPTS)); } catch(e){} }
+function drawAgenda(){
+  const today = iso(new Date()), days = [...Array(6)].map((_,i)=>addD(weekStart,i));
+  const f = d => d.toLocaleDateString("pt-BR",{day:"numeric",month:"long"});
+  $("#wLabel").textContent = `Semana de ${f(days[0])} a ${f(days[5])}`;
+  $("#week").innerHTML = days.map(d => { const k = iso(d), evs = APPTS.filter(a=>a.date===k).sort((a,b)=>a.time.localeCompare(b.time));
+    return `<div class="dcol${k===today?" today":""}"><h3><span>${DAYN[d.getDay()]} ${d.getDate()}</span>${k===today?"<span>Hoje</span>":""}</h3>
+      ${evs.map(a => { const l = LEADS.find(x=>x.id===a.leadId); if(!l) return "";
+        return `<button class="ev t-${norm(a.tipo)}" data-id="${l.id}"><b>${a.time} · ${a.tipo}</b>${esc(l.medico)}<br><span class="hint">${esc(l.cidade)}</span>${a.tipo==="Visita"?`<span class="wa">Lembrete no WhatsApp 1 dia antes</span>`:""}</button>`; }).join("") || `<p class="empty">Livre</p>`}</div>`; }).join("");
+  const sem = LEADS.filter(l => l.status==="visita" && !APPTS.some(a=>a.leadId===l.id && a.date>=today));
+  $("#semData").innerHTML = `<h2>Visitas sem data</h2>` + (sem.length ? `<p class="hint">Estes médicos aceitaram visita, mas ainda falta marcar. Abra a ficha para agendar.</p><div class="found">${sem.map(leadRow).join("")}</div>` : `<p class="hint">Todas as visitas aceitas já têm data marcada.</p>`);
+}
+$("#wPrev").onclick = () => { weekStart = addD(weekStart,-7); drawAgenda(); };
+$("#wNext").onclick = () => { weekStart = addD(weekStart,7); drawAgenda(); };
+$("#wToday").onclick = () => { weekStart = monday(new Date()); drawAgenda(); };
+function nextBiz(){ let d = addD(new Date(),1); while(d.getDay()===0||d.getDay()===6) d = addD(d,1); return iso(d); }
+
+/* Navegação */
+function fillEsp(){ const sel=$("#fEsp"), cur=sel.value; sel.innerHTML = `<option value="">Todas as especialidades</option>` + [...new Set(LEADS.map(l=>l.esp))].sort().map(e=>`<option>${esc(e)}</option>`).join(""); sel.value = cur; }
+function goTab(t){
+  document.querySelectorAll("nav.tabs button").forEach(x=>x.setAttribute("aria-selected", x.dataset.tab===t));
+  document.querySelectorAll(".view").forEach(v=>v.hidden = v.id !== "v-"+t);
+  try{ localStorage.setItem("sa-tab", t); }catch(e){}
+}
+document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => goTab(b.dataset.tab));
+document.addEventListener("click", e => { const b = e.target.closest("[data-goto]"); if(b) goTab(b.dataset.goto); });
+document.querySelectorAll("#zoom button").forEach(b => b.onclick = () => { zoom = b.dataset.z;
+  document.querySelectorAll("#zoom button").forEach(x=>x.setAttribute("aria-pressed", x===b)); drawMap(); });
+$("#fAnel").onchange = refresh; $("#fEsp").onchange = refresh;
+$("#map").addEventListener("click", e => { const p = e.target.closest(".pin"); if(p) openSheet(+p.dataset.id); });
+
+fillEsp(); refresh(); drawPlan(); drawBoard();
+try{ const t = localStorage.getItem("sa-tab"); if(t && $("#v-"+t)) goTab(t); }catch(e){}
+</script>
+
+</body>
+</html>
